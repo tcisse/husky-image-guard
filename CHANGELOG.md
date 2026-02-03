@@ -1,5 +1,11 @@
 # husky-image-guard
 
+## 1.0.7
+
+### Patch Changes
+
+- [`8fb5863`](https://github.com/tcisse/husky-image-guard/commit/8fb586389813808cb94533304dc5941977605765) - github-action workflow
+
 ## 1.0.6
 
 ### Patch Changes

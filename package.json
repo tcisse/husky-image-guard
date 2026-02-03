@@ -1,6 +1,6 @@
 {
   "name": "husky-image-guard",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "A Husky hook to check image sizes before a Git push",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
