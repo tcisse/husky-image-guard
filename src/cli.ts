@@ -5,7 +5,7 @@ import { CliOptions } from './types';
 
 const args = process.argv.slice(2);
 
-// Verifier si c'est la commande init
+// Check if it's the init command
 if (args[0] === 'init') {
   require('./init');
   process.exit(0);
@@ -46,51 +46,51 @@ function parseArgs(args: string[]): CliOptions {
 
 function showHelp(): void {
   console.log(`
-  image-guard - Verificateur de taille d'images pour Git hooks
+  image-guard - Image size checker for Git hooks
 
   Usage:
     image-guard [command] [options]
 
-  Commandes:
-    init                     Initialiser le fichier de configuration
-    (aucune)                 Verifier les images
+  Commands:
+    init                     Initialize configuration file
+    (none)                   Check images
 
   Options:
-    -s, --max-size <size>    Taille maximale (ex: 1MB, 500KB, 1048576)
-    -d, --dirs <dirs>        Dossiers a verifier, separes par des virgules
-    -e, --extensions <exts>  Extensions a verifier, separees par des virgules
-    -h, --help               Afficher l'aide
-    -v, --version            Afficher la version
+    -s, --max-size <size>    Maximum size (e.g., 1MB, 500KB, 1048576)
+    -d, --dirs <dirs>        Directories to check, comma-separated
+    -e, --extensions <exts>  Extensions to check, comma-separated
+    -h, --help               Show help
+    -v, --version            Show version
 
-  Exemples:
-    image-guard init                    # Creer le fichier de config
-    image-guard                         # Verifier avec la config
-    image-guard --max-size 500KB        # Override la taille max
-    image-guard --dirs public,assets    # Override les dossiers
+  Examples:
+    image-guard init                    # Create config file
+    image-guard                         # Check with config
+    image-guard --max-size 500KB        # Override max size
+    image-guard --dirs public,assets    # Override directories
     image-guard -s 2MB -d src/images -e jpg,png,webp
 
   Configuration:
-    Lancez 'image-guard init' pour creer le fichier de configuration
-    ou creez manuellement un fichier image-guard.config.cjs
+    Run 'image-guard init' to create the configuration file
+    or manually create an image-guard.config.cjs file
 
-  Fichiers de config supportes:
-    - image-guard.config.cjs (recommande pour Next.js/ESM)
+  Supported config files:
+    - image-guard.config.cjs (recommended for Next.js/ESM)
     - image-guard.config.js
     - image-guard.config.json
     - .imageguardrc.json
-    - package.json (cle "imageGuard")
+    - package.json ("imageGuard" key)
 `);
 }
 
-// Charger la configuration
+// Load configuration
 const fileConfig = loadConfig();
 const cliConfig = parseArgs(args);
 
-// Fusionner les configurations (CLI > fichier > defaut)
+// Merge configurations (CLI > file > default)
 const config = { ...fileConfig, ...cliConfig };
 
-// Executer la verification
+// Run the check
 const result = checkImages(config);
 
-// Quitter avec le bon code
+// Exit with proper code
 process.exit(result.success ? 0 : 1);

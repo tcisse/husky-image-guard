@@ -50,46 +50,46 @@ if (fs.existsSync(packageJsonPath)) {
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
     hasPackageJsonConfig = !!packageJson.imageGuard;
   } catch (e) {
-    // Ignorer les erreurs de parsing
+    // Ignore parsing errors
   }
 }
 
 if (hasExistingConfig || hasPackageJsonConfig) {
   console.log(`\n${colors.cyan}husky-image-guard${colors.reset}`);
-  console.log(`${colors.green}   Configuration existante detectee${colors.reset}\n`);
+  console.log(`${colors.green}   Existing configuration detected${colors.reset}\n`);
   process.exit(0);
 }
 
 const defaultConfigContent = `/**
- * Configuration pour husky-image-guard
+ * Configuration for husky-image-guard
  * Documentation: https://www.npmjs.com/package/husky-image-guard
  *
- * Ce fichier utilise l'extension .cjs pour compatibilite avec les projets ESM
- * (Next.js, projets avec "type": "module" dans package.json)
+ * This file uses the .cjs extension for compatibility with ESM projects
+ * (Next.js, projects with "type": "module" in package.json)
  */
 
 module.exports = {
   /**
-   * Taille maximale autorisee pour les images
-   * Formats supportes: '500KB', '1MB', '2MB', ou en bytes (1048576)
+   * Maximum allowed size for images
+   * Supported formats: '500KB', '1MB', '2MB', or in bytes (1048576)
    */
   maxSize: '1MB',
 
   /**
-   * Dossiers a analyser pour les images
-   * Chemins relatifs a la racine du projet
+   * Directories to scan for images
+   * Paths relative to project root
    */
   directories: [
     'public',
     'assets',
-    // Ajoutez vos dossiers ici
+    // Add your directories here
     // 'src/images',
     // 'static',
   ],
 
   /**
-   * Extensions de fichiers a verifier
-   * Sans le point (ex: 'jpg' et non '.jpg')
+   * File extensions to check
+   * Without the dot (e.g., 'jpg' not '.jpg')
    */
   extensions: [
     'jpg',
@@ -109,27 +109,27 @@ try {
 
   console.log(`
 ${colors.cyan}----------------------------------------------------${colors.reset}
-${colors.green}  husky-image-guard installe avec succes !${colors.reset}
+${colors.green}  husky-image-guard installed successfully!${colors.reset}
 ${colors.cyan}----------------------------------------------------${colors.reset}
 
-  ${colors.yellow}Fichier cree:${colors.reset} image-guard.config.cjs
+  ${colors.yellow}File created:${colors.reset} image-guard.config.cjs
 
-  ${colors.cyan}Prochaines etapes:${colors.reset}
+  ${colors.cyan}Next steps:${colors.reset}
 
-  1. ${colors.yellow}Configurez vos dossiers${colors.reset} dans image-guard.config.cjs:
-     - Modifiez ${colors.green}directories${colors.reset} avec vos chemins d'images
-     - Ajustez ${colors.green}maxSize${colors.reset} selon vos besoins
-     - Personnalisez ${colors.green}extensions${colors.reset} si necessaire
+  1. ${colors.yellow}Configure your directories${colors.reset} in image-guard.config.cjs:
+     - Modify ${colors.green}directories${colors.reset} with your image paths
+     - Adjust ${colors.green}maxSize${colors.reset} according to your needs
+     - Customize ${colors.green}extensions${colors.reset} if necessary
 
-  2. ${colors.yellow}Ajoutez le hook Husky${colors.reset}:
+  2. ${colors.yellow}Add the Husky hook${colors.reset}:
      ${colors.green}echo "npx image-guard" >> .husky/pre-push${colors.reset}
 
-  3. ${colors.yellow}Testez la configuration${colors.reset}:
+  3. ${colors.yellow}Test the configuration${colors.reset}:
      ${colors.green}npx image-guard${colors.reset}
 
 ${colors.cyan}----------------------------------------------------${colors.reset}
 `);
 } catch (error) {
   console.log(`\n${colors.cyan}husky-image-guard${colors.reset}`);
-  console.log(`${colors.yellow}   Lancez 'npx image-guard init' pour creer la configuration${colors.reset}\n`);
+  console.log(`${colors.yellow}   Run 'npx image-guard init' to create the configuration${colors.reset}\n`);
 }

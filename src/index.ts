@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { ImageGuardConfig, OversizedFile, CheckResult } from './types';
 
-// Couleurs ANSI pour le terminal
+// ANSI colors for terminal
 const colors = {
   red: '\x1b[0;31m',
   green: '\x1b[0;32m',
@@ -10,7 +10,7 @@ const colors = {
   reset: '\x1b[0m'
 };
 
-// Configuration par defaut
+// Default configuration
 export const defaultConfig: ImageGuardConfig = {
   maxSize: '1MB',
   directories: ['public', 'assets'],
@@ -18,7 +18,7 @@ export const defaultConfig: ImageGuardConfig = {
 };
 
 /**
- * Convertit une taille lisible en bytes
+ * Converts a human-readable size to bytes
  */
 export function parseSize(size: string | number): number {
   if (typeof size === 'number') {
@@ -29,7 +29,7 @@ export function parseSize(size: string | number): number {
   const match = sizeStr.match(/^([\d.]+)\s*(B|KB|MB|GB)?$/i);
 
   if (!match) {
-    console.warn(`Format de taille invalide: ${size}. Utilisation de 1MB par defaut.`);
+    console.warn(`Invalid size format: ${size}. Using default 1MB.`);
     return 1 * 1024 * 1024;
   }
 
@@ -47,7 +47,7 @@ export function parseSize(size: string | number): number {
 }
 
 /**
- * Formate une taille en bytes en format lisible
+ * Formats bytes to human-readable size
  */
 export function formatSize(bytes: number): string {
   if (bytes >= 1024 * 1024 * 1024) {
@@ -61,7 +61,7 @@ export function formatSize(bytes: number): string {
 }
 
 /**
- * Recupere recursivement tous les fichiers d'un dossier
+ * Recursively retrieves all files from a directory
  */
 function getFilesRecursively(dir: string, extensions: string[]): string[] {
   const files: string[] = [];
@@ -89,14 +89,14 @@ function getFilesRecursively(dir: string, extensions: string[]): string[] {
 }
 
 /**
- * Normalise les extensions (retire les points, met en minuscule)
+ * Normalizes extensions (removes dots, converts to lowercase)
  */
 function normalizeExtensions(extensions: string[]): string[] {
   return extensions.map(ext => ext.toLowerCase().replace(/^\./, ''));
 }
 
 /**
- * Verifie la taille des images
+ * Checks image sizes
  */
 export function checkImages(config: Partial<ImageGuardConfig> = {}): CheckResult {
   const options: ImageGuardConfig = { ...defaultConfig, ...config };
@@ -105,8 +105,8 @@ export function checkImages(config: Partial<ImageGuardConfig> = {}): CheckResult
   const directories = options.directories;
   const extensions = normalizeExtensions(options.extensions);
 
-  console.log(`${colors.yellow}Verification de la taille des images...${colors.reset}`);
-  console.log(`   Limite: ${formatSize(maxSizeBytes)} | Dossiers: ${directories.join(', ')} | Extensions: ${extensions.join(', ')}\n`);
+  console.log(`${colors.yellow}Checking image sizes...${colors.reset}`);
+  console.log(`   Limit: ${formatSize(maxSizeBytes)} | Directories: ${directories.join(', ')} | Extensions: ${extensions.join(', ')}\n`);
 
   const oversizedFiles: OversizedFile[] = [];
   let totalChecked = 0;
@@ -117,12 +117,12 @@ export function checkImages(config: Partial<ImageGuardConfig> = {}): CheckResult
 
     if (fs.existsSync(dirPath)) {
       dirsFound++;
-      console.log(`Verification du dossier: ${colors.yellow}${dir}${colors.reset}`);
+      console.log(`Checking directory: ${colors.yellow}${dir}${colors.reset}`);
 
       const files = getFilesRecursively(dirPath, extensions);
 
       if (files.length === 0) {
-        console.log(`   ${colors.yellow}(aucune image trouvee)${colors.reset}`);
+        console.log(`   ${colors.yellow}(no images found)${colors.reset}`);
       }
 
       for (const file of files) {
@@ -146,24 +146,24 @@ export function checkImages(config: Partial<ImageGuardConfig> = {}): CheckResult
   }
 
   if (dirsFound === 0) {
-    console.log(`${colors.yellow}Aucun des dossiers configures n'existe: ${directories.join(', ')}${colors.reset}\n`);
+    console.log(`${colors.yellow}None of the configured directories exist: ${directories.join(', ')}${colors.reset}\n`);
   }
 
   console.log('----------------------------------------');
 
   if (oversizedFiles.length > 0) {
-    console.log(`${colors.red}PUSH BLOQUE${colors.reset}\n`);
-    console.log(`${colors.red}Les images suivantes depassent la limite de ${formatSize(maxSizeBytes)}:${colors.reset}`);
+    console.log(`${colors.red}PUSH BLOCKED${colors.reset}\n`);
+    console.log(`${colors.red}The following images exceed the ${formatSize(maxSizeBytes)} limit:${colors.reset}`);
 
     for (const file of oversizedFiles) {
       console.log(`  ${colors.red}- ${file.path} (${file.sizeHuman})${colors.reset}`);
     }
 
-    console.log(`\n${colors.yellow}Solutions possibles:${colors.reset}`);
-    console.log('  1. Compresser les images avec TinyPNG, ImageOptim');
-    console.log('  2. Reduire les dimensions des images');
-    console.log('  3. Convertir en format WebP pour une meilleure compression');
-    console.log('  4. Utiliser: npx @squoosh/cli --webp auto <image>\n');
+    console.log(`\n${colors.yellow}Possible solutions:${colors.reset}`);
+    console.log('  1. Compress images with TinyPNG, ImageOptim');
+    console.log('  2. Reduce image dimensions');
+    console.log('  3. Convert to WebP format for better compression');
+    console.log('  4. Use: npx @squoosh/cli --webp auto <image>\n');
 
     return {
       success: false,
@@ -173,8 +173,8 @@ export function checkImages(config: Partial<ImageGuardConfig> = {}): CheckResult
     };
   }
 
-  console.log(`${colors.green}Toutes les images sont conformes (< ${formatSize(maxSizeBytes)})${colors.reset}`);
-  console.log(`   ${totalChecked} image(s) verifiee(s)\n`);
+  console.log(`${colors.green}All images are compliant (< ${formatSize(maxSizeBytes)})${colors.reset}`);
+  console.log(`   ${totalChecked} image(s) checked\n`);
 
   return {
     success: true,
@@ -185,7 +185,7 @@ export function checkImages(config: Partial<ImageGuardConfig> = {}): CheckResult
 }
 
 /**
- * Charge la configuration depuis un fichier
+ * Loads configuration from a file
  */
 export function loadConfig(): Partial<ImageGuardConfig> {
   const configPaths = [
@@ -200,7 +200,7 @@ export function loadConfig(): Partial<ImageGuardConfig> {
     const fullPath = path.resolve(process.cwd(), configPath);
 
     if (fs.existsSync(fullPath)) {
-      console.log(`Configuration chargee: ${configPath}\n`);
+      console.log(`Configuration loaded from: ${configPath}\n`);
 
       if (configPath.endsWith('.js') || configPath.endsWith('.cjs')) {
         delete require.cache[fullPath];
@@ -216,7 +216,7 @@ export function loadConfig(): Partial<ImageGuardConfig> {
   if (fs.existsSync(packageJsonPath)) {
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
     if (packageJson.imageGuard) {
-      console.log(`Configuration chargee depuis: package.json\n`);
+      console.log(`Configuration loaded from: package.json\n`);
       return packageJson.imageGuard;
     }
   }

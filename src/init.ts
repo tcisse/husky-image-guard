@@ -34,31 +34,31 @@ function question(rl: readline.Interface, query: string): Promise<string> {
 
 function generateConfigContent(config: ImageGuardConfig): string {
   return `/**
- * Configuration pour husky-image-guard
+ * Configuration for husky-image-guard
  * Documentation: https://www.npmjs.com/package/husky-image-guard
  *
- * Ce fichier utilise l'extension .cjs pour compatibilite avec les projets ESM
- * (Next.js, projets avec "type": "module" dans package.json)
+ * This file uses the .cjs extension for compatibility with ESM projects
+ * (Next.js, projects with "type": "module" in package.json)
  */
 
 module.exports = {
   /**
-   * Taille maximale autorisee pour les images
-   * Formats supportes: '500KB', '1MB', '2MB', ou en bytes (1048576)
+   * Maximum allowed size for images
+   * Supported formats: '500KB', '1MB', '2MB', or in bytes (1048576)
    */
   maxSize: '${config.maxSize}',
 
   /**
-   * Dossiers a analyser pour les images
-   * Chemins relatifs a la racine du projet
+   * Directories to scan for images
+   * Paths relative to project root
    */
   directories: [
     ${config.directories.map(d => `'${d}'`).join(',\n    ')}
   ],
 
   /**
-   * Extensions de fichiers a verifier
-   * Sans le point (ex: 'jpg' et non '.jpg')
+   * File extensions to check
+   * Without the dot (e.g., 'jpg' not '.jpg')
    */
   extensions: [
     ${config.extensions.map(e => `'${e}'`).join(',\n    ')}
@@ -70,19 +70,19 @@ module.exports = {
 async function interactiveSetup(): Promise<ImageGuardConfig> {
   const rl = createReadlineInterface();
 
-  console.log(`\n${colors.cyan}Configuration de husky-image-guard${colors.reset}\n`);
-  console.log(`${colors.yellow}Repondez aux questions suivantes (appuyez sur Entree pour garder la valeur par defaut)${colors.reset}\n`);
+  console.log(`\n${colors.cyan}husky-image-guard configuration${colors.reset}\n`);
+  console.log(`${colors.yellow}Answer the following questions (press Enter to keep default value)${colors.reset}\n`);
 
   try {
     const maxSizeInput = await question(
       rl,
-      `${colors.cyan}?${colors.reset} Taille maximale des images ${colors.yellow}(${defaultConfig.maxSize})${colors.reset}: `
+      `${colors.cyan}?${colors.reset} Maximum image size ${colors.yellow}(${defaultConfig.maxSize})${colors.reset}: `
     );
     const maxSize = maxSizeInput.trim() || defaultConfig.maxSize;
 
     const dirsInput = await question(
       rl,
-      `${colors.cyan}?${colors.reset} Dossiers a verifier (separes par des virgules) ${colors.yellow}(${defaultConfig.directories.join(', ')})${colors.reset}: `
+      `${colors.cyan}?${colors.reset} Directories to check (comma-separated) ${colors.yellow}(${defaultConfig.directories.join(', ')})${colors.reset}: `
     );
     const directories = dirsInput.trim()
       ? dirsInput.split(',').map(d => d.trim())
@@ -90,7 +90,7 @@ async function interactiveSetup(): Promise<ImageGuardConfig> {
 
     const extsInput = await question(
       rl,
-      `${colors.cyan}?${colors.reset} Extensions a verifier (separees par des virgules) ${colors.yellow}(${defaultConfig.extensions.join(', ')})${colors.reset}: `
+      `${colors.cyan}?${colors.reset} Extensions to check (comma-separated) ${colors.yellow}(${defaultConfig.extensions.join(', ')})${colors.reset}: `
     );
     const extensions = extsInput.trim()
       ? extsInput.split(',').map(e => e.trim().toLowerCase().replace('.', ''))
@@ -108,41 +108,41 @@ async function interactiveSetup(): Promise<ImageGuardConfig> {
 async function init(options: InitOptions = {}): Promise<boolean> {
   const configPath = path.resolve(process.cwd(), CONFIG_FILENAME);
 
-  // Verifier si le fichier existe deja
+  // Check if file already exists
   if (fs.existsSync(configPath) && !options.force) {
-    console.log(`${colors.yellow}Le fichier ${CONFIG_FILENAME} existe deja.${colors.reset}`);
-    console.log(`   Utilisez ${colors.cyan}--force${colors.reset} pour le remplacer.\n`);
+    console.log(`${colors.yellow}The ${CONFIG_FILENAME} file already exists.${colors.reset}`);
+    console.log(`   Use ${colors.cyan}--force${colors.reset} to replace it.\n`);
     return false;
   }
 
   let config: ImageGuardConfig;
 
-  // Mode interactif ou valeurs par defaut
+  // Interactive mode or default values
   if (options.interactive !== false && process.stdin.isTTY) {
     config = await interactiveSetup();
   } else {
     config = defaultConfig;
   }
 
-  // Generer le fichier de configuration
+  // Generate configuration file
   const configContent = generateConfigContent(config);
   fs.writeFileSync(configPath, configContent, 'utf8');
 
-  console.log(`\n${colors.green}Fichier ${CONFIG_FILENAME} cree avec succes !${colors.reset}\n`);
+  console.log(`\n${colors.green}${CONFIG_FILENAME} file created successfully!${colors.reset}\n`);
   console.log(`${colors.cyan}Configuration:${colors.reset}`);
-  console.log(`   - Taille max: ${colors.yellow}${config.maxSize}${colors.reset}`);
-  console.log(`   - Dossiers: ${colors.yellow}${config.directories.join(', ')}${colors.reset}`);
+  console.log(`   - Max size: ${colors.yellow}${config.maxSize}${colors.reset}`);
+  console.log(`   - Directories: ${colors.yellow}${config.directories.join(', ')}${colors.reset}`);
   console.log(`   - Extensions: ${colors.yellow}${config.extensions.join(', ')}${colors.reset}\n`);
 
-  console.log(`${colors.cyan}Prochaines etapes:${colors.reset}`);
-  console.log(`   1. Modifiez ${colors.yellow}${CONFIG_FILENAME}${colors.reset} selon vos besoins`);
-  console.log(`   2. Ajoutez le hook Husky:`);
+  console.log(`${colors.cyan}Next steps:${colors.reset}`);
+  console.log(`   1. Modify ${colors.yellow}${CONFIG_FILENAME}${colors.reset} according to your needs`);
+  console.log(`   2. Add the Husky hook:`);
   console.log(`      ${colors.green}echo "npx image-guard" >> .husky/pre-push${colors.reset}\n`);
 
   return true;
 }
 
-// Parser les arguments
+// Parse arguments
 const args = process.argv.slice(2);
 const options: InitOptions = {
   force: args.includes('--force') || args.includes('-f'),
@@ -151,28 +151,28 @@ const options: InitOptions = {
 
 if (args.includes('--help') || args.includes('-h')) {
   console.log(`
-  ${colors.cyan}image-guard init${colors.reset} - Initialiser la configuration
+  ${colors.cyan}image-guard init${colors.reset} - Initialize configuration
 
   Usage:
     npx image-guard init [options]
 
   Options:
-    -y, --yes      Utiliser les valeurs par defaut (non-interactif)
-    -f, --force    Remplacer le fichier de config existant
-    -h, --help     Afficher l'aide
+    -y, --yes      Use default values (non-interactive)
+    -f, --force    Replace existing config file
+    -h, --help     Show help
 
-  Exemples:
-    npx image-guard init           # Mode interactif
-    npx image-guard init --yes     # Valeurs par defaut
-    npx image-guard init --force   # Remplacer la config existante
+  Examples:
+    npx image-guard init           # Interactive mode
+    npx image-guard init --yes     # Default values
+    npx image-guard init --force   # Replace existing config
 `);
   process.exit(0);
 }
 
-// Executer l'initialisation
+// Run initialization
 init(options)
   .then(success => process.exit(success ? 0 : 1))
   .catch(error => {
-    console.error(`${colors.red}Erreur: ${error.message}${colors.reset}`);
+    console.error(`${colors.red}Error: ${error.message}${colors.reset}`);
     process.exit(1);
   });
