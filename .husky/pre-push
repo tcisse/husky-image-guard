@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# Vérifier la taille des images avant le push
+./scripts/check-image-size.sh

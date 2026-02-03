@@ -1,0 +1,43 @@
+{
+  "name": "husky-image-guard",
+  "version": "1.0.0",
+  "description": "Un hook Husky pour vérifier la taille des images avant un push Git",
+  "main": "src/index.js",
+  "bin": {
+    "image-guard": "./bin/cli.js"
+  },
+  "scripts": {
+    "test": "node bin/cli.js",
+    "postinstall": "node bin/postinstall.js",
+    "prepare": "husky || true"
+  },
+  "keywords": [
+    "husky",
+    "git-hooks",
+    "image",
+    "size",
+    "optimization",
+    "pre-push",
+    "pre-commit"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "peerDependencies": {
+    "husky": ">=8.0.0"
+  },
+  "devDependencies": {
+    "husky": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md"
+  ]
+}
