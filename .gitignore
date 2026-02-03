@@ -57,3 +57,4 @@ temp/
 *.temp
 image-guard.config.cjs
 .claude/
+.CHANGESETS.md
