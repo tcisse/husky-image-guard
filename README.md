@@ -9,34 +9,57 @@
 - Supporte plusieurs formats : JPG, PNG, GIF, WebP, SVG, BMP, ICO
 - Configuration flexible via fichier ou CLI
 - Messages d'erreur clairs avec suggestions de solutions
+- Compatible avec les projets ESM (Next.js, etc.)
 
 ## Installation
 
+### npm
 ```bash
 npm install husky-image-guard --save-dev
 ```
 
-Un fichier `image-guard.config.js` sera automatiquement cree a l'installation.
+### pnpm
+```bash
+pnpm add husky-image-guard -D
+```
+
+### yarn
+```bash
+yarn add husky-image-guard -D
+```
+
+### bun
+```bash
+bun add husky-image-guard -D
+```
+
+Un fichier `image-guard.config.cjs` sera automatiquement cree a l'installation.
 
 ## Configuration rapide
 
 ### 1. Initialiser Husky (si pas deja fait)
 
-```bash
-npx husky init
-```
+| Gestionnaire | Commande |
+|--------------|----------|
+| npm | `npx husky init` |
+| pnpm | `pnpm exec husky init` |
+| yarn | `yarn husky init` |
+| bun | `bunx husky init` |
 
 ### 2. Ajouter le hook pre-push
 
-```bash
-echo "npx image-guard" >> .husky/pre-push
-```
+| Gestionnaire | Commande |
+|--------------|----------|
+| npm | `echo "npx image-guard" >> .husky/pre-push` |
+| pnpm | `echo "pnpm exec image-guard" >> .husky/pre-push` |
+| yarn | `echo "yarn image-guard" >> .husky/pre-push` |
+| bun | `echo "bunx image-guard" >> .husky/pre-push` |
 
 C'est tout !
 
 ## Configuration
 
-### Fichier image-guard.config.js (recommande)
+### Fichier image-guard.config.cjs (recommande)
 
 ```javascript
 module.exports = {
@@ -86,28 +109,27 @@ module.exports = {
 
 ## Utilisation CLI
 
+| Action | npm | pnpm | yarn | bun |
+|--------|-----|------|------|-----|
+| Verifier les images | `npx image-guard` | `pnpm exec image-guard` | `yarn image-guard` | `bunx image-guard` |
+| Initialiser config | `npx image-guard init` | `pnpm exec image-guard init` | `yarn image-guard init` | `bunx image-guard init` |
+| Init (non-interactif) | `npx image-guard init --yes` | `pnpm exec image-guard init --yes` | `yarn image-guard init --yes` | `bunx image-guard init --yes` |
+| Aide | `npx image-guard --help` | `pnpm exec image-guard --help` | `yarn image-guard --help` | `bunx image-guard --help` |
+
+### Exemples avec options
+
 ```bash
-# Verifier les images avec la configuration
-npx image-guard
-
-# Initialiser/recreer le fichier de configuration
-npx image-guard init
-
-# Initialiser avec les valeurs par defaut (non-interactif)
-npx image-guard init --yes
-
 # Specifier une taille max temporaire
-npx image-guard --max-size 500KB
-npx image-guard --max-size 2MB
+npx image-guard --max-size 500KB        # npm
+pnpm exec image-guard --max-size 500KB  # pnpm
+yarn image-guard --max-size 500KB       # yarn
+bunx image-guard --max-size 500KB       # bun
 
 # Specifier les dossiers temporairement
 npx image-guard --dirs public,assets,images
 
 # Combiner les options
-npx image-guard --max-size 500KB --dirs src/images,public
-
-# Aide
-npx image-guard --help
+npx image-guard --max-size 500KB --dirs src/images,public -e jpg,png,webp
 ```
 
 ## Options CLI
@@ -122,21 +144,15 @@ npx image-guard --help
 
 ## Commande init
 
-```bash
-# Mode interactif (pose des questions)
-npx image-guard init
-
-# Mode non-interactif (valeurs par defaut)
-npx image-guard init --yes
-
-# Remplacer un fichier existant
-npx image-guard init --force
-```
+| Option | Description |
+|--------|-------------|
+| `--yes` ou `-y` | Utiliser les valeurs par defaut (non-interactif) |
+| `--force` ou `-f` | Remplacer le fichier de config existant |
 
 ## Utilisation programmatique
 
-```javascript
-const { checkImages } = require('husky-image-guard');
+```typescript
+import { checkImages } from 'husky-image-guard';
 
 const result = checkImages({
   maxSize: '500KB',
@@ -150,14 +166,15 @@ console.log(result);
 //   totalChecked: 10,
 //   oversizedFiles: [
 //     { path: 'public/hero.jpg', size: 1548576, sizeHuman: '1.48MB' }
-//   ]
+//   ],
+//   maxSizeBytes: 512000
 // }
 ```
 
 ## Exemple de sortie
 
 ```
-Configuration chargee: image-guard.config.js
+Configuration chargee: image-guard.config.cjs
 
 Verification de la taille des images...
    Limite: 1.00MB | Dossiers: public, assets | Extensions: jpg, jpeg, png
@@ -167,7 +184,7 @@ Verification du dossier: public
   [OK] public/icon.svg (2.10KB)
 
 Verification du dossier: assets
-  [ERREUR] assets/hero-image.jpg (2.34MB)
+  [X] assets/hero-image.jpg (2.34MB)
   [OK] assets/thumbnail.webp (89.00KB)
 
 ----------------------------------------
@@ -197,9 +214,12 @@ Solutions possibles:
 
 ### Hook pre-commit (au lieu de pre-push)
 
-```bash
-echo "npx image-guard" >> .husky/pre-commit
-```
+| Gestionnaire | Commande |
+|--------------|----------|
+| npm | `echo "npx image-guard" >> .husky/pre-commit` |
+| pnpm | `echo "pnpm exec image-guard" >> .husky/pre-commit` |
+| yarn | `echo "yarn image-guard" >> .husky/pre-commit` |
+| bun | `echo "bunx image-guard" >> .husky/pre-commit` |
 
 ## License
 

@@ -1,5 +1,6 @@
-const fs = require('fs');
-const path = require('path');
+import * as fs from 'fs';
+import * as path from 'path';
+import { ImageGuardConfig, OversizedFile, CheckResult } from './types';
 
 // Couleurs ANSI pour le terminal
 const colors = {
@@ -9,8 +10,8 @@ const colors = {
   reset: '\x1b[0m'
 };
 
-// Configuration par défaut
-const defaultConfig = {
+// Configuration par defaut
+export const defaultConfig: ImageGuardConfig = {
   maxSize: '1MB',
   directories: ['public', 'assets'],
   extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico']
@@ -18,28 +19,24 @@ const defaultConfig = {
 
 /**
  * Convertit une taille lisible en bytes
- * @param {string|number} size - Taille (ex: '1MB', '500KB', 1048576)
- * @returns {number} Taille en bytes
  */
-function parseSize(size) {
+export function parseSize(size: string | number): number {
   if (typeof size === 'number') {
     return size;
   }
 
   const sizeStr = size.toString().toUpperCase().trim();
-
-  // Regex pour extraire le nombre et l'unité
   const match = sizeStr.match(/^([\d.]+)\s*(B|KB|MB|GB)?$/i);
 
   if (!match) {
-    console.warn(`Format de taille invalide: ${size}. Utilisation de 1MB par défaut.`);
+    console.warn(`Format de taille invalide: ${size}. Utilisation de 1MB par defaut.`);
     return 1 * 1024 * 1024;
   }
 
   const value = parseFloat(match[1]);
   const unit = (match[2] || 'B').toUpperCase();
 
-  const multipliers = {
+  const multipliers: Record<string, number> = {
     'B': 1,
     'KB': 1024,
     'MB': 1024 * 1024,
@@ -51,10 +48,8 @@ function parseSize(size) {
 
 /**
  * Formate une taille en bytes en format lisible
- * @param {number} bytes - Taille en bytes
- * @returns {string} Taille formatée
  */
-function formatSize(bytes) {
+export function formatSize(bytes: number): string {
   if (bytes >= 1024 * 1024 * 1024) {
     return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)}GB`;
   } else if (bytes >= 1024 * 1024) {
@@ -66,13 +61,10 @@ function formatSize(bytes) {
 }
 
 /**
- * Récupère récursivement tous les fichiers d'un dossier
- * @param {string} dir - Chemin du dossier
- * @param {string[]} extensions - Extensions à rechercher
- * @returns {string[]} Liste des fichiers trouvés
+ * Recupere recursivement tous les fichiers d'un dossier
  */
-function getFilesRecursively(dir, extensions) {
-  const files = [];
+function getFilesRecursively(dir: string, extensions: string[]): string[] {
+  const files: string[] = [];
 
   if (!fs.existsSync(dir)) {
     return files;
@@ -98,30 +90,25 @@ function getFilesRecursively(dir, extensions) {
 
 /**
  * Normalise les extensions (retire les points, met en minuscule)
- * @param {string[]} extensions - Liste des extensions
- * @returns {string[]} Extensions normalisées
  */
-function normalizeExtensions(extensions) {
+function normalizeExtensions(extensions: string[]): string[] {
   return extensions.map(ext => ext.toLowerCase().replace(/^\./, ''));
 }
 
 /**
- * Vérifie la taille des images
- * @param {Object} config - Configuration
- * @returns {Object} Résultat de la vérification
+ * Verifie la taille des images
  */
-function checkImages(config = {}) {
-  const options = { ...defaultConfig, ...config };
+export function checkImages(config: Partial<ImageGuardConfig> = {}): CheckResult {
+  const options: ImageGuardConfig = { ...defaultConfig, ...config };
 
-  // Convertir maxSize en bytes si c'est une string
   const maxSizeBytes = parseSize(options.maxSize);
   const directories = options.directories;
   const extensions = normalizeExtensions(options.extensions);
 
-  console.log(`${colors.yellow}🔍 Vérification de la taille des images...${colors.reset}`);
+  console.log(`${colors.yellow}Verification de la taille des images...${colors.reset}`);
   console.log(`   Limite: ${formatSize(maxSizeBytes)} | Dossiers: ${directories.join(', ')} | Extensions: ${extensions.join(', ')}\n`);
 
-  const oversizedFiles = [];
+  const oversizedFiles: OversizedFile[] = [];
   let totalChecked = 0;
   let dirsFound = 0;
 
@@ -130,12 +117,12 @@ function checkImages(config = {}) {
 
     if (fs.existsSync(dirPath)) {
       dirsFound++;
-      console.log(`📁 Vérification du dossier: ${colors.yellow}${dir}${colors.reset}`);
+      console.log(`Verification du dossier: ${colors.yellow}${dir}${colors.reset}`);
 
       const files = getFilesRecursively(dirPath, extensions);
 
       if (files.length === 0) {
-        console.log(`   ${colors.yellow}(aucune image trouvée)${colors.reset}`);
+        console.log(`   ${colors.yellow}(aucune image trouvee)${colors.reset}`);
       }
 
       for (const file of files) {
@@ -147,10 +134,10 @@ function checkImages(config = {}) {
         totalChecked++;
 
         if (fileSize > maxSizeBytes) {
-          console.log(`  ${colors.red}✗ ${relativePath} (${sizeHuman})${colors.reset}`);
+          console.log(`  ${colors.red}[X] ${relativePath} (${sizeHuman})${colors.reset}`);
           oversizedFiles.push({ path: relativePath, size: fileSize, sizeHuman });
         } else {
-          console.log(`  ${colors.green}✓ ${relativePath} (${sizeHuman})${colors.reset}`);
+          console.log(`  ${colors.green}[OK] ${relativePath} (${sizeHuman})${colors.reset}`);
         }
       }
 
@@ -159,23 +146,22 @@ function checkImages(config = {}) {
   }
 
   if (dirsFound === 0) {
-    console.log(`${colors.yellow}⚠️  Aucun des dossiers configurés n'existe: ${directories.join(', ')}${colors.reset}\n`);
+    console.log(`${colors.yellow}Aucun des dossiers configures n'existe: ${directories.join(', ')}${colors.reset}\n`);
   }
 
-  // Résultat final
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('----------------------------------------');
 
   if (oversizedFiles.length > 0) {
-    console.log(`${colors.red}❌ PUSH BLOQUÉ${colors.reset}\n`);
-    console.log(`${colors.red}Les images suivantes dépassent la limite de ${formatSize(maxSizeBytes)}:${colors.reset}`);
+    console.log(`${colors.red}PUSH BLOQUE${colors.reset}\n`);
+    console.log(`${colors.red}Les images suivantes depassent la limite de ${formatSize(maxSizeBytes)}:${colors.reset}`);
 
     for (const file of oversizedFiles) {
-      console.log(`  ${colors.red}• ${file.path} (${file.sizeHuman})${colors.reset}`);
+      console.log(`  ${colors.red}- ${file.path} (${file.sizeHuman})${colors.reset}`);
     }
 
-    console.log(`\n${colors.yellow}💡 Solutions possibles:${colors.reset}`);
+    console.log(`\n${colors.yellow}Solutions possibles:${colors.reset}`);
     console.log('  1. Compresser les images avec TinyPNG, ImageOptim');
-    console.log('  2. Réduire les dimensions des images');
+    console.log('  2. Reduire les dimensions des images');
     console.log('  3. Convertir en format WebP pour une meilleure compression');
     console.log('  4. Utiliser: npx @squoosh/cli --webp auto <image>\n');
 
@@ -187,8 +173,8 @@ function checkImages(config = {}) {
     };
   }
 
-  console.log(`${colors.green}✅ Toutes les images sont conformes (< ${formatSize(maxSizeBytes)})${colors.reset}`);
-  console.log(`   ${totalChecked} image(s) vérifiée(s)\n`);
+  console.log(`${colors.green}Toutes les images sont conformes (< ${formatSize(maxSizeBytes)})${colors.reset}`);
+  console.log(`   ${totalChecked} image(s) verifiee(s)\n`);
 
   return {
     success: true,
@@ -200,10 +186,10 @@ function checkImages(config = {}) {
 
 /**
  * Charge la configuration depuis un fichier
- * @returns {Object} Configuration chargée
  */
-function loadConfig() {
+export function loadConfig(): Partial<ImageGuardConfig> {
   const configPaths = [
+    'image-guard.config.cjs',
     'image-guard.config.js',
     'image-guard.config.json',
     '.imageguardrc',
@@ -214,10 +200,9 @@ function loadConfig() {
     const fullPath = path.resolve(process.cwd(), configPath);
 
     if (fs.existsSync(fullPath)) {
-      console.log(`📄 Configuration chargée: ${configPath}\n`);
+      console.log(`Configuration chargee: ${configPath}\n`);
 
-      if (configPath.endsWith('.js')) {
-        // Clear require cache pour recharger les modifications
+      if (configPath.endsWith('.js') || configPath.endsWith('.cjs')) {
         delete require.cache[fullPath];
         return require(fullPath);
       } else {
@@ -227,23 +212,14 @@ function loadConfig() {
     }
   }
 
-  // Chercher dans package.json
   const packageJsonPath = path.resolve(process.cwd(), 'package.json');
   if (fs.existsSync(packageJsonPath)) {
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
     if (packageJson.imageGuard) {
-      console.log(`📄 Configuration chargée depuis: package.json\n`);
+      console.log(`Configuration chargee depuis: package.json\n`);
       return packageJson.imageGuard;
     }
   }
 
   return {};
 }
-
-module.exports = {
-  checkImages,
-  loadConfig,
-  parseSize,
-  formatSize,
-  defaultConfig
-};
