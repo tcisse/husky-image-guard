@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { checkImages, loadConfig } from './index';
+import { checkImages, loadConfig, resizeOversizedImages } from './index';
 import { CliOptions } from './types';
 
 const args = process.argv.slice(2);
@@ -27,6 +27,15 @@ function parseArgs(args: string[]): CliOptions {
 
     if (arg === '--extensions' || arg === '-e') {
       options.extensions = args[++i].split(',').map(e => e.trim());
+    }
+
+    if (arg === '--mode' || arg === '-m') {
+      const mode = args[++i];
+      if (mode !== 'block' && mode !== 'resize') {
+        console.error(`Invalid mode: ${mode}. Must be 'block' or 'resize'.`);
+        process.exit(1);
+      }
+      options.mode = mode;
     }
 
     if (arg === '--help' || arg === '-h') {
@@ -59,6 +68,8 @@ function showHelp(): void {
     -s, --max-size <size>    Maximum size (e.g., 1MB, 500KB, 1048576)
     -d, --dirs <dirs>        Directories to check, comma-separated
     -e, --extensions <exts>  Extensions to check, comma-separated
+    -m, --mode <mode>        Mode: 'block' (default) or 'resize'
+                             resize requires 'sharp' package
     -h, --help               Show help
     -v, --version            Show version
 
@@ -66,8 +77,14 @@ function showHelp(): void {
     image-guard init                    # Create config file
     image-guard                         # Check with config
     image-guard --max-size 500KB        # Override max size
+    image-guard --mode resize           # Auto-resize oversized images
     image-guard --dirs public,assets    # Override directories
     image-guard -s 2MB -d src/images -e jpg,png,webp
+
+  Modes:
+    block  - Block push if images exceed size limit (default)
+    resize - Automatically resize oversized images to fit limit
+             Requires: npm install --save-dev sharp
 
   Configuration:
     Run 'image-guard init' to create the configuration file
@@ -82,15 +99,24 @@ function showHelp(): void {
 `);
 }
 
-// Load configuration
 const fileConfig = loadConfig();
 const cliConfig = parseArgs(args);
 
 // Merge configurations (CLI > file > default)
 const config = { ...fileConfig, ...cliConfig };
 
-// Run the check
-const result = checkImages(config);
+async function main() {
+  const result = checkImages(config);
 
-// Exit with proper code
-process.exit(result.success ? 0 : 1);
+  if (config.mode === 'resize' && !result.success && result.oversizedFiles.length > 0) {
+    const resizeResult = await resizeOversizedImages(result.oversizedFiles, result.maxSizeBytes);
+    process.exit(1);
+  }
+
+  process.exit(result.success ? 0 : 1);
+}
+
+main().catch(error => {
+  console.error('Error:', error);
+  process.exit(1);
+});

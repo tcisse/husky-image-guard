@@ -2,6 +2,7 @@ export interface ImageGuardConfig {
   maxSize: string | number;
   directories: string[];
   extensions: string[];
+  mode: 'block' | 'resize';
 }
 
 export interface OversizedFile {
@@ -10,11 +11,20 @@ export interface OversizedFile {
   sizeHuman: string;
 }
 
+export interface ResizedFile {
+  path: string;
+  originalSize: number;
+  originalSizeHuman: string;
+  newSize: number;
+  newSizeHuman: string;
+}
+
 export interface CheckResult {
   success: boolean;
   totalChecked: number;
   oversizedFiles: OversizedFile[];
   maxSizeBytes: number;
+  resizedFiles: ResizedFile[];
 }
 
 export interface InitOptions {
@@ -26,4 +36,5 @@ export interface CliOptions {
   maxSize?: string;
   directories?: string[];
   extensions?: string[];
+  mode?: 'block' | 'resize';
 }

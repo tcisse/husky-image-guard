@@ -110,6 +110,7 @@ describe('checkImages', () => {
     expect(result.success).toBe(true);
     expect(result.totalChecked).toBe(1);
     expect(result.oversizedFiles).toHaveLength(0);
+    expect(result.resizedFiles).toHaveLength(0);
   });
 
   it('should fail when images exceed size limit', () => {
@@ -131,6 +132,7 @@ describe('checkImages', () => {
     expect(result.totalChecked).toBe(1);
     expect(result.oversizedFiles).toHaveLength(1);
     expect(result.oversizedFiles[0].path).toContain('large.jpg');
+    expect(result.resizedFiles).toHaveLength(0);
   });
 
   it('should check multiple directories', () => {
@@ -153,6 +155,7 @@ describe('checkImages', () => {
 
     expect(result.success).toBe(true);
     expect(result.totalChecked).toBe(2);
+    expect(result.resizedFiles).toHaveLength(0);
   });
 
   it('should filter by extensions', () => {
@@ -173,6 +176,7 @@ describe('checkImages', () => {
 
     expect(result.success).toBe(true);
     expect(result.totalChecked).toBe(2);
+    expect(result.resizedFiles).toHaveLength(0);
   });
 
   it('should handle non-existent directories gracefully', () => {
@@ -189,6 +193,7 @@ describe('checkImages', () => {
 
     expect(result.success).toBe(true);
     expect(result.totalChecked).toBe(0);
+    expect(result.resizedFiles).toHaveLength(0);
   });
 
   it('should check images recursively in subdirectories', () => {
@@ -211,11 +216,17 @@ describe('checkImages', () => {
 
     expect(result.success).toBe(true);
     expect(result.totalChecked).toBe(2);
+    expect(result.resizedFiles).toHaveLength(0);
   });
 
   it('should use default config when no config provided', () => {
     const result = checkImages();
     expect(result.maxSizeBytes).toBe(parseSize(defaultConfig.maxSize));
+    expect(result.resizedFiles).toHaveLength(0);
+  });
+
+  it('should include mode in default config', () => {
+    expect(defaultConfig.mode).toBe('block');
   });
 });
 

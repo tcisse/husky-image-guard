@@ -100,7 +100,15 @@ module.exports = {
     'svg',
     'bmp',
     'ico'
-  ]
+  ],
+
+  /**
+   * Mode: 'block' or 'resize'
+   * - block: Block push if images exceed size limit (default)
+   * - resize: Automatically resize oversized images to fit limit
+   *   (requires 'sharp' package: npm install --save-dev sharp)
+   */
+  mode: 'block'
 };
 `;
 

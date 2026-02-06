@@ -1,12 +1,14 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { ImageGuardConfig, OversizedFile, CheckResult } from './types';
+import { ImageGuardConfig, OversizedFile, CheckResult, ResizedFile } from './types';
+import { loadSharp, isResizable, resizeImage } from './resize';
 
 // ANSI colors for terminal
 const colors = {
   red: '\x1b[0;31m',
   green: '\x1b[0;32m',
   yellow: '\x1b[1;33m',
+  cyan: '\x1b[0;36m',
   reset: '\x1b[0m'
 };
 
@@ -14,7 +16,8 @@ const colors = {
 export const defaultConfig: ImageGuardConfig = {
   maxSize: '1MB',
   directories: ['public', 'assets'],
-  extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico']
+  extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico'],
+  mode: 'block'
 };
 
 /**
@@ -169,7 +172,8 @@ export function checkImages(config: Partial<ImageGuardConfig> = {}): CheckResult
       success: false,
       totalChecked,
       oversizedFiles,
-      maxSizeBytes
+      maxSizeBytes,
+      resizedFiles: []
     };
   }
 
@@ -180,8 +184,95 @@ export function checkImages(config: Partial<ImageGuardConfig> = {}): CheckResult
     success: true,
     totalChecked,
     oversizedFiles: [],
-    maxSizeBytes
+    maxSizeBytes,
+    resizedFiles: []
   };
+}
+
+/**
+ * Resizes oversized images to fit under the size limit
+ */
+export async function resizeOversizedImages(
+  oversizedFiles: OversizedFile[],
+  maxSizeBytes: number
+): Promise<{ resizedFiles: ResizedFile[], failedFiles: OversizedFile[] }> {
+  const sharp = loadSharp();
+
+  if (!sharp) {
+    console.log(`\n${colors.yellow}Sharp library not installed.${colors.reset}`);
+    console.log(`To use resize mode, install sharp:`);
+    console.log(`  ${colors.green}npm install --save-dev sharp${colors.reset}\n`);
+    console.log(`Falling back to block mode...\n`);
+    return { resizedFiles: [], failedFiles: oversizedFiles };
+  }
+
+  const resizedFiles: ResizedFile[] = [];
+  const failedFiles: OversizedFile[] = [];
+
+  console.log(`\n${colors.yellow}Resizing oversized images...${colors.reset}\n`);
+
+  for (const file of oversizedFiles) {
+    const ext = path.extname(file.path).toLowerCase().slice(1);
+
+    if (!isResizable(ext)) {
+      console.log(`  ${colors.yellow}[SKIP] ${file.path} (${ext.toUpperCase()} not resizable)${colors.reset}`);
+      failedFiles.push(file);
+      continue;
+    }
+
+    console.log(`  ${colors.cyan}[RESIZE] ${file.path} (${file.sizeHuman})...${colors.reset}`);
+
+    const result = await resizeImage(
+      path.resolve(process.cwd(), file.path),
+      file.size,
+      maxSizeBytes,
+      sharp
+    );
+
+    if (result) {
+      console.log(`  ${colors.green}[OK] Resized to ${result.newSizeHuman} (saved ${formatSize(result.originalSize - result.newSize)})${colors.reset}`);
+      resizedFiles.push(result);
+    } else {
+      console.log(`  ${colors.red}[FAILED] Could not resize ${file.path}${colors.reset}`);
+      failedFiles.push(file);
+    }
+  }
+
+  // Print summary
+  console.log('\n----------------------------------------');
+
+  if (resizedFiles.length > 0) {
+    console.log(`${colors.green}IMAGES RESIZED${colors.reset}\n`);
+    console.log(`${colors.green}Successfully resized ${resizedFiles.length} image(s):${colors.reset}\n`);
+
+    for (const file of resizedFiles) {
+      const relativePath = path.relative(process.cwd(), file.path);
+      console.log(`  ${colors.green}- ${relativePath}${colors.reset}`);
+      console.log(`    ${colors.yellow}${file.originalSizeHuman} → ${file.newSizeHuman}${colors.reset}`);
+    }
+
+    console.log(`\n${colors.yellow}Next steps:${colors.reset}`);
+    console.log(`  1. Review the resized images to ensure quality is acceptable`);
+    console.log(`  2. Stage the changes: ${colors.green}git add .${colors.reset}`);
+    console.log(`  3. Amend your commit: ${colors.green}git commit --amend --no-edit${colors.reset}`);
+    console.log(`  4. Push again: ${colors.green}git push${colors.reset}\n`);
+  }
+
+  if (failedFiles.length > 0) {
+    console.log(`${colors.red}RESIZE FAILED${colors.reset}\n`);
+    console.log(`${colors.red}Could not resize ${failedFiles.length} image(s):${colors.reset}\n`);
+
+    for (const file of failedFiles) {
+      console.log(`  ${colors.red}- ${file.path} (${file.sizeHuman})${colors.reset}`);
+    }
+
+    console.log(`\n${colors.yellow}Manual action required:${colors.reset}`);
+    console.log('  1. Compress images with TinyPNG, ImageOptim');
+    console.log('  2. Further reduce image dimensions');
+    console.log('  3. Convert to WebP format for better compression\n');
+  }
+
+  return { resizedFiles, failedFiles };
 }
 
 /**

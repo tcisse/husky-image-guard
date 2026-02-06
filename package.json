@@ -40,7 +40,13 @@
   },
   "homepage": "https://github.com/tcisse/husky-image-guard#readme",
   "peerDependencies": {
-    "husky": ">=8.0.0"
+    "husky": ">=8.0.0",
+    "sharp": ">=0.33.0"
+  },
+  "peerDependenciesMeta": {
+    "sharp": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.2",
@@ -48,11 +54,12 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^20.0.0",
     "jest": "^30.2.0",
+    "sharp": "^0.33.0",
     "ts-jest": "^29.4.6",
     "typescript": "^5.0.0"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=18.0.0"
   },
   "files": [
     "dist",

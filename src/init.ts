@@ -18,7 +18,8 @@ const CONFIG_FILENAME = 'image-guard.config.cjs';
 const defaultConfig: ImageGuardConfig = {
   maxSize: '1MB',
   directories: ['public', 'assets'],
-  extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico']
+  extensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico'],
+  mode: 'block'
 };
 
 function createReadlineInterface(): readline.Interface {
@@ -62,7 +63,15 @@ module.exports = {
    */
   extensions: [
     ${config.extensions.map(e => `'${e}'`).join(',\n    ')}
-  ]
+  ],
+
+  /**
+   * Mode: 'block' or 'resize'
+   * - block: Block push if images exceed size limit (default)
+   * - resize: Automatically resize oversized images to fit limit
+   *   (requires 'sharp' package: npm install --save-dev sharp)
+   */
+  mode: '${config.mode}'
 };
 `;
 }
@@ -96,9 +105,23 @@ async function interactiveSetup(): Promise<ImageGuardConfig> {
       ? extsInput.split(',').map(e => e.trim().toLowerCase().replace('.', ''))
       : defaultConfig.extensions;
 
+    const modeInput = await question(
+      rl,
+      `${colors.cyan}?${colors.reset} Mode (block/resize) ${colors.yellow}(${defaultConfig.mode})${colors.reset}: `
+    );
+    let mode: 'block' | 'resize' = defaultConfig.mode;
+    if (modeInput.trim()) {
+      const inputMode = modeInput.trim().toLowerCase();
+      if (inputMode === 'block' || inputMode === 'resize') {
+        mode = inputMode;
+      } else {
+        console.log(`${colors.yellow}Invalid mode, using default: ${defaultConfig.mode}${colors.reset}`);
+      }
+    }
+
     rl.close();
 
-    return { maxSize, directories, extensions };
+    return { maxSize, directories, extensions, mode };
   } catch (error) {
     rl.close();
     throw error;
@@ -132,7 +155,8 @@ async function init(options: InitOptions = {}): Promise<boolean> {
   console.log(`${colors.cyan}Configuration:${colors.reset}`);
   console.log(`   - Max size: ${colors.yellow}${config.maxSize}${colors.reset}`);
   console.log(`   - Directories: ${colors.yellow}${config.directories.join(', ')}${colors.reset}`);
-  console.log(`   - Extensions: ${colors.yellow}${config.extensions.join(', ')}${colors.reset}\n`);
+  console.log(`   - Extensions: ${colors.yellow}${config.extensions.join(', ')}${colors.reset}`);
+  console.log(`   - Mode: ${colors.yellow}${config.mode}${colors.reset}\n`);
 
   console.log(`${colors.cyan}Next steps:${colors.reset}`);
   console.log(`   1. Modify ${colors.yellow}${CONFIG_FILENAME}${colors.reset} according to your needs`);
